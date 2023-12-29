@@ -1,0 +1,75 @@
+﻿@page "/deletestudent/{Id}"
+@using SchooleManagment.Shared.Model;
+
+@inject HttpClient _httpclient  
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<h3>DeleteStudent</h3>
+<div>
+    <form>
+        <div class="mb-3">
+            <label for="firstName" class="form-label">First Name:</label>
+            <input type="text" readonly class="form-control" @bind="student.FirstName" id="firstName" />
+        </div>
+        <div class="mb-3">
+            <label for="lastName" class="form-label">Last Name:</label>
+            <input type="text" readonly class="form-control" @bind="student.LastName" id="lastName" />
+        </div>
+        <div class="mb-3">
+            <label for="studentRollNo" class="form-label">Roll No:</label>
+            <input type="text" readonly class="form-control" @bind="student.StudentRollNo" id="studentRollNo" />
+        </div>
+        <div class="mb-3">
+            <label for="studentStd" class="form-label">Class:</label>
+            <input type="text" readonly class="form-control" @bind="student.StudentStd" id="studentStd" />
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" @onclick="Delete">Delete</button>
+            <button type="button" class="btn btn-danger" @onclick="Cancel">Cancel</button>
+        </div>
+
+    </form>
+</div>
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    student student = new student();
+
+    protected override async Task OnInitializedAsync()
+    {
+        student = await _httpclient.GetFromJsonAsync<student>("api/studnetAPI/GetStudentDetails/" + Id);
+    }
+
+
+    protected async Task Delete()
+    {
+
+        var response = await _httpclient.DeleteAsync($"api/StudnetAPI/DeleteStudent/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var isStudentDeleted = await response.Content.ReadFromJsonAsync<bool>();
+
+            if (isStudentDeleted)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Deleted Successfully", isStudentDeleted);
+                NavigationManager.NavigateTo("studentlist");
+            }
+            else
+            {              
+                await JsRuntime.InvokeVoidAsync("alert", "Deletion failed");
+            }
+        }
+        else
+        {           
+            await JsRuntime.InvokeVoidAsync("alert", "HTTP request failed");
+        }
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("studentlist");
+
+    }
+}

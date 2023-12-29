@@ -1,0 +1,57 @@
+﻿@page "/addstudent"
+@using SchooleManagment.Shared.Model;
+
+@inject HttpClient _httpclient
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<h3>AddStudent</h3>
+<div>
+    <form>
+        <div class="mb-3">
+            <label for="firstName" class="form-label">First Name:</label>
+            <input type="text" class="form-control" @bind="student.FirstName" id="firstName" />
+        </div>
+        <div class="mb-3">
+            <label for="lastName" class="form-label">Last Name:</label>
+            <input type="text" class="form-control" @bind="student.LastName" id="lastName" />
+        </div>
+        <div class="mb-3">
+            <label for="studentRollNo" class="form-label">Roll No:</label>
+            <input type="text" class="form-control" @bind="student.StudentRollNo" id="studentRollNo" />
+        </div>
+        <div class="mb-3">
+            <label for="studentStd" class="form-label">Class:</label>
+            <input type="text" class="form-control" @bind="student.StudentStd" id="studentStd" />
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" @onclick="Save">Save</button>
+            <button type="button" class="btn btn-danger" @onclick="Cancel">Cancel</button>
+        </div>
+       
+    </form>
+</div>
+@code {
+    student student = new student();
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("studentlist");
+    
+    }
+    protected async Task Save()
+    {
+
+        var response = await _httpclient.PostAsJsonAsync("api/StudnetAPI/AddStudent", @student);
+
+        student studentResponse = await response.Content.ReadFromJsonAsync<student>();
+
+        if (studentResponse?.Id > 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully", studentResponse);
+            NavigationManager.NavigateTo("studentlist");
+        }
+    }
+
+
+}

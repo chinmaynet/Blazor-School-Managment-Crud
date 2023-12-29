@@ -1,0 +1,117 @@
+﻿@page "/studentlist"
+@using SchooleManagment.Shared.Model;
+@using System.Text.Json;
+
+@inject HttpClient _httpclient  
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<div>
+
+    <h3>Student List</h3>
+    @if (students != null)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Roll No</th>
+                    <th>Class</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var student in students)
+                {
+                    <tr>
+                        <td>@student.id</td>
+                        <td>@student.firstName</td>
+                        <td>@student.lastName</td>
+                        <td>@student.studentRollNo</td>
+                        <td>@student.studentStd</td>
+                        <td>
+                            <a href="/updatestudent/@student.id">Edit</a>
+                            <a href="/deletestudent/@student.id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No students found.</p>
+    }
+</div>
+
+<div>
+    <div>
+        <input class="bg-primary rounded-2 text-white border-0" type="button" @onclick="GoToAddNewStudent" value="Add New Student "/>
+    </div>
+</div>
+@code {
+    List<StudentResponse> students = new List<StudentResponse>();
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var response = await _httpclient.GetAsync("api/StudentAPI/GetAllStudent");
+    //     response.EnsureSuccessStatusCode();
+
+    //     students = await response.Content.ReadFromJsonAsync<List<StudentResponse>>();
+
+    //     base.OnInitialized();
+    // }
+    void GoToAddNewStudent()
+    {
+        NavigationManager.NavigateTo("addstudent");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await _httpclient.GetAsync("api/StudnetAPI/GetAllStudents");
+        response.EnsureSuccessStatusCode();
+
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!string.IsNullOrEmpty(content))
+            {
+                try
+                {
+                    students = JsonSerializer.Deserialize<List<StudentResponse>>(content, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                }
+                catch (JsonException ex)
+                {
+                    // Handle JSON deserialization error
+                    Console.WriteLine($"JSON deserialization error: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Handle empty response
+                Console.WriteLine("API response is empty.");
+            }
+        }
+        else
+        {
+            // Handle non-success status code
+            Console.WriteLine($"API request failed with status code: {response.StatusCode}");
+        }
+        JsRuntime.InvokeVoidAsync("console.log", "Response Content:", students);
+        base.OnInitialized();
+    }
+
+
+    public class StudentResponse
+    {
+        public int id { get; set; }
+        public string firstName { get; set; }
+        public string lastName { get; set; }
+        public string studentRollNo { get; set; }
+        public string studentStd { get; set; }
+    }
+}
